@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>Cool Search Engine</title>
+    <link rel="stylesheet" href="http://207.180.202.42/alex/style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+*{
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+body{
+  padding: 0 20px;
+}
+.wrapper{
+  max-width: 450px;
+  margin: 150px auto;
+}
+.wrapper .search-input{
+  width: 100%;
+  border-radius: 5px;
+  position: relative;
+  box-shadow: 0px 1px 5px 3px rgba(0,0,0,0.12);
+}
+.search-input input{
+  height: 55px;
+  width: 100%;
+  outline: none;
+  border: none;
+  border-radius: 5px;
+  padding: 0 60px 0 20px;
+  box-shadow: 0px 1px 5px rgba(0,0,0,0.1);
+}
+.search-input.active input{
+  border-radius: 5px 5px 0 0;
+}
+.search-input .autocom-box{
+  padding: 0;
+  opacity: 0;
+  pointer-events: none;
+  max-height: 280px;
+  overflow-y: auto;
+}
+.search-input.active .autocom-box{
+  padding: 10px 8px;
+  opacity: 1;
+  pointer-events: auto;
+}
+.autocom-box li{
+  list-style: none;
+  padding: 8px 12px;
+  display: none;
+  width: 100%;
+  cursor: default;
+  border-radius: 3px;
+}
+.search-input.active .autocom-box li{
+  display: block;
+}
+.autocom-box li:hover{
+  background: #54536b;
+}
+.search-input .icon{
+  position: absolute;
+  right: 0px;
+  top: 0px;
+  height: 55px;
+  width: 55px;
+  text-align: center;
+  line-height: 55px;
+  color: #644bff;
+  cursor: pointer;
+}
+    </style>
+  </head>
+  <body>
+    <div class="wrapper">
+      <div class="search-input">
+        <a href="" target="_blank" hidden></a>
+        <input type="text" placeholder="Type to search..">
+        <div class="autocom-box">
+          <!-- here list are inserted from javascript -->
+        </div>
+      </div>
+    </div>
+
+    <div class="wrapper">
+        <div class="res-box">
+          <!-- here list are inserted from javascript -->
+        </div>
+    </div>
+
+    <script>
+let complete_request_id = 0;
+let complete_response_id = 0;
+
+let cache = {};
+
+// getting all required elements
+const searchWrapper = document.querySelector(".search-input");
+const inputBox = searchWrapper.querySelector("input");
+const suggBox = searchWrapper.querySelector(".autocom-box");
+const resBox = document.querySelector(".res-box");
+let linkTag = searchWrapper.querySelector("a");
+let webLink;
+
+input.addEventListener("keypress", function(event) {
+if (event.key === "Enter") {
+    let txt = input.value;
+    let data = await (await fetch(`/search/${txt}`)).text();
+    data = data.split("\n");
+    data = data.map((x) => `<li>${x}</li>`);
+    resBox.innerHTML = data.join("");
+}
+}
+
+// if user press any key and release
+inputBox.onkeyup = (e) => {
+  let userData = e.target.value; //user enetered data
+    if (userData && userData in cache) {
+        let data = cache[userData];
+        searchWrapper.classList.add("active"); //show autocomplete box
+        showSuggestions(data);
+        let allList = suggBox.querySelectorAll("li");
+        for (let i = 0; i < allList.length; i++) {
+          //adding onclick attribute in all li tag
+          allList[i].setAttribute("onclick", "select(this)");
+        }
+    }
+    else if (userData && userData.length > 2) {
+      let id = complete_request_id ++;
+      fetch(`/complete/${userData}/5`)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        return response.text(); // or response.json() if expecting JSON
+      })
+      .then(data => {
+	  if (id >= complete_response_id) {
+	      complete_response_id = id;
+        data = data.split("\n").map((x) => `<li>${x}</li>`);
+          cache[userData] = data;
+
+        searchWrapper.classList.add("active"); //show autocomplete box
+        showSuggestions(data);
+        let allList = suggBox.querySelectorAll("li");
+        for (let i = 0; i < allList.length; i++) {
+          //adding onclick attribute in all li tag
+          allList[i].setAttribute("onclick", "select(this)");
+        }
+				      }
+      })
+      .catch(error => {
+        console.error('There was an error!', error);
+      });
+
+  } else {
+    searchWrapper.classList.remove("active"); //hide autocomplete box
+  }
+}
+function select(element) {
+  let selectData = element.textContent;
+  inputBox.value = selectData;
+  searchWrapper.classList.remove("active");
+}
+function showSuggestions(list) {
+  let listData;
+  if (!list.length) {
+    userValue = inputBox.value;
+    listData = `<li>${userValue}</li>`;
+  } else {
+    listData = list.join('');
+  }
+  suggBox.innerHTML = listData;
+}
+    </script>
+
+  </body>
+</html>
+

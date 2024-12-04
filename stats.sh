@@ -1,0 +1,1 @@
+clickhouse-client --format TabSeparatedWithNames "SELECT (SELECT COUNT(*) FROM pages.scraped) AS scraped, (SELECT COUNT(*) FROM pages.to_query) AS to_scrape, (SELECT COUNT(*) FROM pages.words) AS words, (SELECT COUNT(*) FROM pages.links) AS links"

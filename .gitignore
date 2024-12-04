@@ -1,0 +1,16 @@
+config.json
+tmp
+test-results
+status
+core
+*.xml
+node_modules
+searcher/target
+searcher/data
+searcher/Rocket.toml
+target
+data
+preprocessed_configs
+uuid
+store
+metadata
